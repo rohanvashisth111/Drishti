@@ -194,7 +194,8 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .topbar-left { display: flex; align-items: center; gap: 0.9rem; }
 .topbar-brand { font-family: var(--font-head); font-size: 1.15rem; font-weight: 800; cursor: pointer; }
 .topbar-brand span { color: var(--cyan); }
-.topbar-eye { width: 28px; height: 28px; border-radius: 7px; background: linear-gradient(135deg, var(--blue), var(--cyan)); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+.topbar-eye { width: 32px; height: 36px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.topbar-eye svg { display: block; width: 100%; height: 100%; }
 .live-badge {
   display: flex; align-items: center; gap: 0.45rem;
   padding: 0.3rem 0.85rem; border-radius: 100px;
@@ -465,21 +466,19 @@ canvas.line-chart { display: block; width: 100%; height: 100%; }
 .det-icon-intruder { color: var(--orange); }
 .det-icon-climbing { color: var(--purple); }
 
-.scan-ring {
-  width: 120px; height: 120px; border-radius: 50%;
-  border: 2px solid rgba(59,130,246,0.3);
-  position: relative; margin: 2rem auto;
+.evil-eye-wrap {
+  width: 120px; height: 130px;
+  margin: 1.5rem auto;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.evil-eye-wrap svg { display: block; width: 100%; height: 100%; }
+
+.evil-eye-loader {
+  width: 56px; height: 62px;
   display: flex; align-items: center; justify-content: center;
 }
-.scan-ring::before, .scan-ring::after {
-  content: ''; position: absolute; border-radius: 50%;
-  border: 2px solid transparent;
-  border-top-color: var(--blue);
-  animation: scanSpin 2s linear infinite;
-}
-.scan-ring::before { inset: -8px; }
-.scan-ring::after { inset: -16px; animation-duration: 3s; animation-direction: reverse; border-top-color: var(--cyan); }
-@keyframes scanSpin { to { transform: rotate(360deg); } }
+.evil-eye-loader svg { display: block; width: 100%; height: 100%; }
 
 .cam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .cam-feed {
@@ -522,7 +521,8 @@ canvas.line-chart { display: block; width: 100%; height: 100%; }
 <div class="toast-stack" id="toast-stack"></div>
 
 <div id="loader">
-  <div class="loader-logo">👁 Drishti</div>
+  <div class="evil-eye-loader" id="eye-loader"></div>
+  <div class="loader-logo" style="font-family:var(--font-head);font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Drishti</div>
   <div class="loader-bar"><div class="loader-fill"></div></div>
   <div class="loader-text">Initializing AI Security Engine...</div>
 </div>
@@ -548,12 +548,10 @@ canvas.line-chart { display: block; width: 100%; height: 100%; }
       <div class="auth-left-bg"></div>
 
       
-      <div class="scan-ring">
-        <span style="font-size:2.2rem">👁</span>
-      </div>
+      <div class="evil-eye-wrap" id="eye-login"></div>
 
       <div class="brand" style="justify-content:center">
-        <div class="brand-name">Dhr<span>isti</span></div>
+        <div class="brand-name">Dri<span>shti</span></div>
       </div>
       <h2 class="auth-headline">Protect What<br><em>Matters Most.</em></h2>
       <p class="auth-sub">AI-powered surveillance that detects intruders, weapons, and threats in real time — before it's too late.</p>
@@ -579,7 +577,7 @@ canvas.line-chart { display: block; width: 100%; height: 100%; }
     <div class="auth-right">
       <div class="auth-box">
         <div style="margin-bottom:2rem">
-          <div class="brand-name" style="font-size:1.4rem">Dhr<span>isti</span></div>
+          <div class="brand-name" style="font-size:1.4rem">Dri<span>shti</span></div>
         </div>
         <div class="auth-title">Welcome back</div>
         <div class="auth-desc">New here? <a onclick="showPage('page-signup')">Create a free account →</a></div>
@@ -612,7 +610,7 @@ canvas.line-chart { display: block; width: 100%; height: 100%; }
   <div class="auth-wrap">
     <div class="auth-left">
       <div class="auth-left-bg"></div>
-      <div class="scan-ring"><span style="font-size:2.2rem">👁</span></div>
+      <div class="evil-eye-wrap" id="eye-signup"></div>
       <div class="brand" style="justify-content:center">
         <div class="brand-name">Dhr<span>isti</span></div>
       </div>
@@ -669,7 +667,7 @@ canvas.line-chart { display: block; width: 100%; height: 100%; }
   
   <div class="topbar">
     <div class="topbar-left">
-      <div class="topbar-brand"><div class="topbar-eye" style="display:inline-flex">👁</div> Dhr<span>isti</span></div>
+      <div class="topbar-brand"><div class="topbar-eye" id="eye-topbar"></div> Dhr<span>isti</span></div>
       <div class="live-badge"><div class="live-dot"></div>LIVE · AI Active</div>
     </div>
     <div class="topbar-right">
@@ -1456,15 +1454,28 @@ function notify(msg, type='info') {
   while (stack.children.length > 4) stack.removeChild(stack.lastChild);
 }
 
+const SHIELD_LG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 100" width="96" height="96"><path d="M48 4 L88 20 L88 56 Q88 82 48 96 Q8 82 8 56 L8 20 Z" fill="#000" stroke="#3b82f6" stroke-width="2"/><path d="M48 12 L80 24 L80 54 Q80 74 48 86 Q16 74 16 54 L16 24 Z" fill="none" stroke="#3b82f6" stroke-width="0.8" stroke-opacity="0.25"/><path d="M20 50 Q48 28 76 50 Q48 72 20 50 Z" fill="#00061a" stroke="#3b82f6" stroke-width="1.2"/><circle cx="48" cy="50" r="11" fill="#3b82f6"/><circle cx="48" cy="50" r="5.5" fill="#000"/><circle cx="52" cy="46" r="2.5" fill="white" fill-opacity="0.9"/><line x1="8" y1="50" x2="19" y2="50" stroke="#3b82f6" stroke-width="0.8" stroke-opacity="0.4"/><line x1="77" y1="50" x2="88" y2="50" stroke="#3b82f6" stroke-width="0.8" stroke-opacity="0.4"/></svg>`;
+const SHIELD_SM = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 52" width="48" height="48"><path d="M24 2 L44 10 L44 28 Q44 41 24 48 Q4 41 4 28 L4 10 Z" fill="#000" stroke="#3b82f6" stroke-width="1.5"/><path d="M10 25 Q24 14 38 25 Q24 36 10 25 Z" fill="#00061a" stroke="#3b82f6" stroke-width="1"/><circle cx="24" cy="25" r="7" fill="#3b82f6"/><circle cx="24" cy="25" r="3.5" fill="#000"/><circle cx="27" cy="22" r="1.5" fill="white" fill-opacity="0.9"/></svg>`;
+const SHIELD_XS = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 36" width="32" height="32"><path d="M16 1.5 L29 6.5 L29 18 Q29 27 16 32 Q3 27 3 18 L3 6.5 Z" fill="#000" stroke="#3b82f6" stroke-width="1.5"/><path d="M5 17 Q16 9 27 17 Q16 25 5 17 Z" fill="#00061a" stroke="#3b82f6" stroke-width="0.9"/><circle cx="16" cy="17" r="5" fill="#3b82f6"/><circle cx="16" cy="17" r="2.5" fill="#000"/><circle cx="18.5" cy="14.5" r="1.2" fill="white" fill-opacity="0.9"/></svg>`;
+
+function injectIcon(id, svg) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = svg;
+}
+
+injectIcon('eye-loader', SHIELD_SM);
+injectIcon('eye-login', SHIELD_LG);
+injectIcon('eye-signup', SHIELD_LG);
+injectIcon('eye-topbar', SHIELD_XS);
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const loginPage = document.getElementById('page-login');
-    const signupPage = document.getElementById('page-signup');
-    if (loginPage && loginPage.classList.contains('active')) doLogin();
-    if (signupPage && signupPage.classList.contains('active')) doSignup();
     if (e.key === 'Escape') closeModal();
-  }
-  if (e.key === 'Escape') closeModal();
+    if (e.key === 'Enter') {
+      const loginPage = document.getElementById('page-login');
+      const signupPage = document.getElementById('page-signup');
+      if (loginPage && loginPage.classList.contains('active')) doLogin();
+      if (signupPage && signupPage.classList.contains('active')) doSignup();
+    }
 });
 </script>
 </body>
